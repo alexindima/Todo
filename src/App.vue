@@ -1,145 +1,14 @@
-<!-- 1/15 
-<template>
-  <h1>Hello World!</h1>
-</template>
--->
-
-<!-- 2/15
 <script>
-  export default {
-    data() {
-      return {
-        message: 'Hello World!'
-      }
-    }
-  }
-</script>
-<template>
-  <h1>{{ message }}</h1>
-</template>-->
+  import JSConfetti from 'js-confetti'  
+  const confetti = new JSConfetti()
 
-<!-- 3/15
-<script>
-  export default {
-    data() {
-      return {
-        titleClass: 'title'
-      }
-    }
-  }
-</script>    
-<template>
-  <h1 :class="titleClass">Make me red</h1>
-</template>
-
-<style>
-.title {
-  color: red;
-}
-</style>-->
-
-<!--4/15
-<script>
-  export default {
-    data() {
-      return {
-        count: 0
-      }
-    },
-    methods: {
-      increment() {
-        this.count++
-      }
-    }
-  }
-</script>
-<template>
-  <button @click="increment">count is: {{ count }}</button>
-</template>-->
-
-<!--5/15
-<script>
-  export default {
-    data() {
-      return {
-        text: ''
-      }
-    }
-  }
-</script>
-<template>
-  <input v-model="text" placeholder="Type here">
-  <br>
-  <p>{{ text }}</p>
-</template>-->
-
-<!--6/15
-<script>
-  export default {
-    data() {
-      return {
-        awesome: true
-      }
-    },
-    methods: {
-      toggle() {
-        this.awesome = !this.awesome
-      }
-    }
-  }
-</script>  
-<template>
-  <button @click="toggle">toggle</button>
-  <h1 v-if="awesome">Vue is awesome!</h1>
-  <h1 v-else>Oh no 😢</h1>
-</template>-->
-
-<!--7/15
-<script>
   let id = 0  
   export default {
     data() {
       return {
         newTodo: '',
-        todos: [
-          { id: id++, text: 'Learn HTML' },
-          { id: id++, text: 'Learn JavaScript' },
-          { id: id++, text: 'Learn Vue' }
-        ]
-      }
-    },
-    methods: {
-      addTodo() {
-        this.todos.push({ id: id++, text: this.newTodo })
-      },
-      removeTodo(todo) {
-        this.todos = this.todos.filter(text => text != todo)
-        // ...
-      }
-    }
-  }
-</script>
-<template>
-  <form @submit.prevent="addTodo">
-    <input v-model="newTodo">
-    <button>Add Todo</button>    
-  </form>
-  <ul>
-    <li v-for="todo in todos" :key="todo.id">
-      {{ todo.text }}
-      <button @click="removeTodo(todo)">X</button>
-    </li>
-  </ul>
-</template>-->
-
-<!--8/15
-<script>
-  let id = 0  
-  export default {
-    data() {
-      return {
-        newTodo: '',
-        hideCompleted: false,
+        filterType: 'All',
+        emptyField: false,
         todos: [
           { id: id++, text: 'Learn HTML', done: true },
           { id: id++, text: 'Learn JavaScript', done: true },
@@ -149,190 +18,151 @@
     },
     computed: {
     filteredTodos() {
-      if (this.hideCompleted == true) {
+      if (this.filterType == 'Active') {
         return this.todos.filter((t) => t.done == false)
+      }
+      else if (this.filterType == 'Completed') {
+        return this.todos.filter((t) => t.done == true)
       }
       else {
         return this.todos
       }
-      
     }
   },
     methods: {
       addTodo() {
-        this.todos.push({ id: id++, text: this.newTodo, done: false })
-        this.newTodo = ''
+        if (this.newTodo.trim().length != 0) {
+          this.todos.push({ id: id++, text: this.newTodo, done: false })     
+          this.newTodo = '' 
+          this.emptyField = false            
+        }        
+        else {
+          this.emptyField = true
+        }
       },
       removeTodo(todo) {
         this.todos = this.todos.filter((t) => t !== todo)
+        this.checkIfAllCompleted()
+      },
+      checkIfAllCompleted() {
+        let startStatus = true
+        this.emptyField = false  
+        this.todos.forEach(function callback(item) {
+          if (item.done != true) {
+            startStatus = false
+          }
+        })
+        if (startStatus == true) {
+          confetti.addConfetti()
+        }
       }
     }
   }
 </script>
 <template>
-  <form @submit.prevent="addTodo">
-    <input v-model="newTodo" />
-    <button>Add Todo</button>
-  </form>
-  <ul>
-    <li v-for="todo in this.filteredTodos" :key="todo.id">
-      <input type="checkbox" v-model="todo.done">
-      <span :class="{ done: todo.done }">{{ todo.text }}</span>
-      <button @click="removeTodo(todo)">X</button>
-    </li>
-  </ul>
-  <button @click="hideCompleted = !hideCompleted">
-    {{ hideCompleted ? 'Show all' : 'Hide completed' }}
-  </button>
+  <div class="filter">
+    <button class="filter_button" :class="{filter_button__selected: (this.filterType == 'All')}" @click="filterType = 'All'">
+    All
+    </button>
+    <button class="filter_button" :class="{filter_button__selected: (this.filterType == 'Active')}" @click="filterType = 'Active'">
+      Active
+    </button>
+    <button class="filter_button" :class="{filter_button__selected: (this.filterType == 'Completed')}" @click="filterType = 'Completed'">
+      Completed
+    </button>
+  </div>
+
+  <div class="tablet">
+    <div class="input-container">
+      <form class="todo_form" @submit.prevent="addTodo">
+        <input class="todo_input" v-model="newTodo" maxlength="40"/>
+        <button class="todo_button">Add Todo</button>
+      </form>
+      <p class="red-error" v-if="emptyField">The task name cannot be empty</p>
+    </div>    
+    
+    <ul class="list">
+      <li class="task" v-for="todo in this.filteredTodos" :key="todo.id">
+        <input type="checkbox" v-model="todo.done" @change="checkIfAllCompleted" placeholder="Input your task">
+        <span class="task_text" :class="{ done: todo.done }">{{ todo.text }}</span>
+        <button class="task_buttom" @click="removeTodo(todo)">X</button>
+      </li>
+    </ul>
+  </div>  
 </template>
 <style>
 .done {
   text-decoration: line-through;
 }
-</style>-->
-
-
-<!--9/15
-<script>
-  export default {
-    mounted() {
-      this.$refs.p.textContent = "fsdfsdf"
-    }
-  }
-</script>
-<template>
-  <p ref="p">hello</p>
-</template>-->
-
-<!--10/15
-<script>
-  export default {
-    data() {
-      return {
-        todoId: 1,
-        todoData: null
-      }
-    },
-    methods: {
-      async fetchData() {
-        this.todoData = null
-        const res = await fetch(
-          `https://jsonplaceholder.typicode.com/todos/${this.todoId}`
-        )
-        this.todoData = await res.json()
-      }
-    },
-    mounted() {
-      this.fetchData()
-    },
-    watch: {
-      todoId(newID) {
-        this.fetchData();
-      }
-    }
-  }
-</script>
-<template>
-  <p>Todo id: {{ todoId }}</p>
-  <button @click="todoId++">Fetch next todo</button>
-  <p v-if="!todoData">Loading...</p>
-  <pre v-else>{{ todoData }}</pre>
-</template>-->
-
-<!--11/15
-<script>
-import ChildComp from './components/ChildComp.vue'
-  export default {
-    components: {
-      ChildComp
-    }
-  }
-</script>
-<template>
-  <ChildComp />
-</template>-->
-
-<!--12/15
-<script>
-  import ChildComp from './components/ChildComp.vue'  
-  export default {
-    props: {
-      msg: String
-    },
-    components: {
-      ChildComp
-    },
-    data() {
-      return {
-        greeting: 'Hello from parent'
-      }
-    }
-  }
-</script>
-<template>
-  <ChildComp :msg="greeting" />
-</template>-->
-
-<!--13/15
-<script>
-  import ChildComp from './components/ChildComp1.vue'  
-  export default {
-    components: {
-      ChildComp
-    },
-    data() {
-      return {
-        childMsg: 'No child msg yet'
-      }
-    }
-  }
-</script>
-<template>
-  <ChildComp  @response="(msg) => childMsg = msg" />
-  <p>{{ childMsg }}</p>
-</template>-->
-
-<!--14/15
-<script>
-  import ChildComp from './components/ChildComp2.vue' 
-  export default {
-    components: {
-      ChildComp
-    },
-    data() {
-      return {
-        msg: 'from parent'
-      }
-    }
-  }
-</script>
-<template>
-  <ChildComp>{{ msg }}</ChildComp>
-</template>-->
-
-<!--15/15-->
-<script>
-  import JSConfetti from 'js-confetti'  
-  const confetti = new JSConfetti()
-  
-  export default {
-    mounted() {
-      this.showConfetti()
-    },
-    methods: {
-      showConfetti() {
-        confetti.addConfetti()
-      }
-    }
-  }
-  </script>  
-  <template>
-    <h1 @click="showConfetti">🎉 Congratulations!</h1>
-  </template>  
-  <style>
-  h1 {
-    text-align: center;
-    cursor: pointer;
-    margin-top: 3em;
-  }
-  </style>
+.input-container {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 2;
+}
+.todo_form {  
+  width: 100%;
+  padding-top: 20px;
+}
+.todo_input {
+  width: 70%;
+  height: 40px ;
+  padding-left: 10px;
+  margin-right: 0px;
+  border-color: black;
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+  outline: none;
+}
+.todo_button {
+  width: 20%;
+  height: 40px ;
+  margin: 10px;
+  margin-left: -2px;
+  border-color: black;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+.red-error {
+  color: red;
+}
+.list {
+  list-style: none;
+  padding: 20px;
+  text-align: left
+}
+.task {
+  padding-bottom: 10px;
+}
+.task_text {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 5px;
+}
+.task_button {
+  padding-right: 10px;
+}
+.tablet {
+  text-align: center;
+  border: solid;
+  border-width: 2px;
+  border-color: black;
+  border-top: none;
+}
+.filter {
+  position: sticky;
+}
+.filter_button {
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0);
+  border-color: black;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  width: 30%;
+}
+.filter_button__selected {
+  width: 40%;
+  border-color: black;
+  border-bottom: none;  
+}
+</style>
